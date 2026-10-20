@@ -1,5 +1,6 @@
 import React from 'react';
 import { useAccounting } from '../../context/AccountingContext';
+import { useAuth } from '../../context/AuthContext';
 import { formatCurrency, formatDateArabic } from '../../utils/formatters';
 import { FinancialCharts } from './FinancialCharts';
 import {
@@ -16,6 +17,9 @@ import {
   ArrowDownRight,
   Receipt,
   FileSpreadsheet,
+  Cloud,
+  LogIn,
+  ShieldCheck,
 } from 'lucide-react';
 import { TransactionType } from '../../types';
 
@@ -44,6 +48,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
     parties,
     seedDemoData,
   } = useAccounting();
+  const { user, loginGoogle } = useAuth();
 
   const isProfitable = netProfit >= 0;
 
@@ -51,7 +56,51 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const recentTransactions = transactions.slice(0, 5);
 
   return (
-    <div className="space-y-8 animate-fade-in pb-12">
+    <div className="space-y-6 animate-fade-in pb-12">
+      {/* Cross-Device Cloud Synchronization Status Bar */}
+      {!user ? (
+        <div className="bg-gradient-to-r from-blue-900 via-indigo-950 to-slate-900 text-white rounded-3xl p-5 sm:p-6 border border-blue-400/25 shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-5 relative overflow-hidden">
+          <div className="flex items-start gap-4 z-10">
+            <div className="w-12 h-12 rounded-2xl bg-blue-500/20 text-blue-300 flex items-center justify-center shrink-0 border border-blue-400/30">
+              <Cloud className="w-6 h-6 animate-pulse text-blue-300" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-[11px] font-black text-blue-300 bg-blue-500/20 px-2.5 py-0.5 rounded-full border border-blue-400/30">
+                  مزامنة سحابية بين الهاتف والكمبيوتر
+                </span>
+              </div>
+              <h3 className="text-base sm:text-lg font-black text-white">
+                تريد أن تظهر بياناتك على أي هاتف أو كمبيوتر تفتح البرنامج منه؟
+              </h3>
+              <p className="text-xs text-slate-300 mt-1 max-w-2xl leading-relaxed">
+                سجّل الدخول بحساب Google لربط وحفظ بياناتك سحابياً. عند فتح البرنامج من هاتفك أو أي متصفح آخر وتسجيل الدخول، ستجد كل العمليات والأرصدة محدثة وفورية في نفس اللحظة!
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={loginGoogle}
+            className="px-6 py-3.5 rounded-2xl bg-white hover:bg-slate-100 text-slate-900 font-black text-xs sm:text-sm shadow-xl transition-all transform active:scale-95 flex items-center justify-center gap-2.5 shrink-0 cursor-pointer z-10"
+          >
+            <LogIn className="w-4 h-4 text-blue-600" />
+            <span>تسجيل الدخول والمزامنة السحابية</span>
+          </button>
+        </div>
+      ) : (
+        <div className="bg-emerald-950/40 border border-emerald-500/30 rounded-2xl p-4 text-emerald-100 text-xs flex items-center justify-between gap-3 flex-wrap">
+          <div className="flex items-center gap-2.5">
+            <ShieldCheck className="w-5 h-5 text-emerald-400 shrink-0" />
+            <span>
+              <strong>المزامنة السحابية الفورية مفعلة:</strong> حسابك مرتبط سحابياً بـ ({user.email}). أي عملية تسجلها هنا تظهر فوراً على هاتفك والكمبيوتر بمجرد فتح البرنامج.
+            </span>
+          </div>
+          <span className="text-[11px] font-black text-emerald-300 bg-emerald-500/20 px-3 py-1 rounded-full border border-emerald-400/30">
+            متزامن مع السحابة ✓
+          </span>
+        </div>
+      )}
+
       {/* Top Banner / Welcome & Quick Action Bar */}
       <div className="bg-gradient-to-l from-emerald-800 via-emerald-700 to-teal-800 rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden">
         {/* Subtle decorative background circles */}

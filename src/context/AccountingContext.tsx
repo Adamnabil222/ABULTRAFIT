@@ -157,6 +157,30 @@ export const AccountingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     // Authenticated user with Firebase Firestore
     setLoading(true);
 
+    // Auto-migrate any transactions or parties created prior to login
+    try {
+      const pendingTxs: Transaction[] = JSON.parse(localStorage.getItem(LS_TX_KEY) || '[]');
+      const pendingParties: Party[] = JSON.parse(localStorage.getItem(LS_PARTIES_KEY) || '[]');
+
+      if (pendingTxs.length > 0) {
+        pendingTxs.forEach((t) => {
+          const tDoc = doc(db, 'users', userId, 'transactions', t.id);
+          setDoc(tDoc, { ...t, userId }).catch(() => {});
+        });
+        localStorage.removeItem(LS_TX_KEY);
+      }
+
+      if (pendingParties.length > 0) {
+        pendingParties.forEach((p) => {
+          const pDoc = doc(db, 'users', userId, 'parties', p.id);
+          setDoc(pDoc, { ...p, userId }).catch(() => {});
+        });
+        localStorage.removeItem(LS_PARTIES_KEY);
+      }
+    } catch (migErr) {
+      console.warn('Local data migration error:', migErr);
+    }
+
     const txCollection = collection(db, 'users', userId, 'transactions');
     const partyCollection = collection(db, 'users', userId, 'parties');
     const accountCollection = collection(db, 'users', userId, 'accounts');
