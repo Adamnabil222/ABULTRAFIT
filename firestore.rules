@@ -1,0 +1,72 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global Safety Net: Default-deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128;
+    }
+
+    function isValidTransaction(data) {
+      return data.keys().hasAll(['userId', 'type', 'date', 'title', 'amount', 'paidAmount']) &&
+        data.userId is string && data.userId.size() <= 128 &&
+        data.type in ['revenue', 'expense', 'transfer', 'debt_payment'] &&
+        data.date is string && data.date.size() <= 10 &&
+        data.title is string && data.title.size() <= 200 &&
+        data.amount is number && data.amount >= 0 &&
+        data.paidAmount is number && data.paidAmount >= 0;
+    }
+
+    function isValidParty(data) {
+      return data.keys().hasAll(['userId', 'name', 'type']) &&
+        data.userId is string && data.userId.size() <= 128 &&
+        data.name is string && data.name.size() > 0 && data.name.size() <= 150 &&
+        data.type in ['customer', 'supplier'];
+    }
+
+    function isValidAccount(data) {
+      return data.keys().hasAll(['userId', 'name', 'type']) &&
+        data.userId is string && data.userId.size() <= 128 &&
+        data.name is string && data.name.size() > 0 && data.name.size() <= 100 &&
+        data.type in ['cash', 'bank', 'wallet'];
+    }
+
+    // Tenant data strictly isolated by authenticated user ID
+    match /users/{userId} {
+      allow read, write: if isOwner(userId);
+
+      match /transactions/{transactionId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && request.resource.data.userId == userId && isValidTransaction(request.resource.data);
+        allow update: if isOwner(userId) && request.resource.data.userId == userId && resource.data.userId == userId && isValidTransaction(request.resource.data);
+        allow delete: if isOwner(userId);
+      }
+
+      match /parties/{partyId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && request.resource.data.userId == userId && isValidParty(request.resource.data);
+        allow update: if isOwner(userId) && request.resource.data.userId == userId && resource.data.userId == userId && isValidParty(request.resource.data);
+        allow delete: if isOwner(userId);
+      }
+
+      match /accounts/{accountId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && request.resource.data.userId == userId && isValidAccount(request.resource.data);
+        allow update: if isOwner(userId) && request.resource.data.userId == userId && resource.data.userId == userId && isValidAccount(request.resource.data);
+        allow delete: if isOwner(userId);
+      }
+    }
+  }
+}

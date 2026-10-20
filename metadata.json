@@ -1,0 +1,6 @@
+{
+  "name": "ABULTRAFIT - المحاسبة وإدارة الأعمال",
+  "description": "برنامج محاسبي متكامل وسهل الاستخدام لإدارة الإيرادات، المصروفات، الأرباح والخسائر، الخزينة، والعملاء والموردين.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
